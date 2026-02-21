@@ -32,6 +32,59 @@
 </head>
 <body class="bg-white text-slate-900">
     <div id="root"></div>
-<script type="module" src="/index.tsx"></script>
+    <script type="module" src="/index.tsx"></script>
+    <script>
+    // 🔗 나중에 n8n 만들고 나서 여기 URL을 교체할 거예요 (지금은 그냥 두세요)
+    const WEBHOOK_URL = '여기에_나중에_n8n_URL_입력';
+
+    document.addEventListener('DOMContentLoaded', function () {
+
+    const form = document.querySelector('form.space-y-6');
+    if (!form) return;
+
+    form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const inputs   = form.querySelectorAll('input');
+        const select   = form.querySelector('select');
+        const textarea = form.querySelector('textarea');
+        const btn      = form.querySelector('button[type="submit"]');
+
+        const payload = {
+        company: inputs[0]?.value?.trim() || '',
+        manager: inputs[1]?.value?.trim() || '',
+        service: select?.value?.trim()    || '',
+        message: textarea?.value?.trim()  || ''
+        };
+
+        if (!payload.company || !payload.manager || !payload.service || !payload.message) {
+        alert('모든 항목을 입력해주세요.');
+        return;
+        }
+
+        const btnOriginal = btn?.innerText || '문의 보내기';
+        if (btn) { btn.innerText = '전송 중...'; btn.disabled = true; }
+
+        try {
+        const res = await fetch(WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+            alert('✅ 문의가 접수되었습니다!\nPlanpia 담당자가 24시간 내에 연락드리겠습니다 😊');
+            form.reset();
+        } else {
+            throw new Error('서버 오류');
+        }
+        } catch (err) {
+        alert('❌ 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+        } finally {
+        if (btn) { btn.innerText = btnOriginal; btn.disabled = false; }
+        }
+    });
+    });
+    </script>
 </body>
 </html>
