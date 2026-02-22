@@ -1,9 +1,19 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Send, MapPin, Phone, Mail } from 'lucide-react';
 import { motion } from 'motion/react';
 
+const WEBHOOK_URL = 'https://eslehoon.app.n8n.cloud/webhook-test/planpia-inquiry';
+
 const Contact: React.FC = () => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    company: '',
+    manager: '',
+    service: '이벤트 경품 대행',
+    message: ''
+  });
+
   const headerVariants = {
     hidden: { opacity: 0, y: -50 },
     visible: { 
@@ -24,6 +34,47 @@ const Contact: React.FC = () => {
       y: 0,
       transition: { duration: 0.6, ease: "easeOut" }
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.company || !formData.manager || !formData.service || !formData.message) {
+      alert('모든 항목을 입력해주세요.');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+
+      if (response.ok) {
+        alert('✅ 문의가 접수되었습니다!\nPlanpia 담당자가 24시간 내에 연락드리겠습니다 😊');
+        setFormData({
+          company: '',
+          manager: '',
+          service: '이벤트 경품 대행',
+          message: ''
+        });
+      } else {
+        throw new Error('서버 오류');
+      }
+    } catch (error) {
+      console.error('Submission error:', error);
+      alert('❌ 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   return (
@@ -69,20 +120,41 @@ const Contact: React.FC = () => {
             </motion.div>
 
             <div className="bg-slate-800/50 p-12 lg:p-20 border-l border-slate-700">
-              <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+              <form className="space-y-6" onSubmit={handleSubmit}>
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-bold text-slate-400 mb-2">업체명</label>
-                    <input type="text" className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors" placeholder="플랜피아" />
+                    <input 
+                      type="text" 
+                      name="company"
+                      value={formData.company}
+                      onChange={handleChange}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors" 
+                      placeholder="플랜피아" 
+                      required
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-bold text-slate-400 mb-2">담당자 성함</label>
-                    <input type="text" className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors" placeholder="홍길동" />
+                    <input 
+                      type="text" 
+                      name="manager"
+                      value={formData.manager}
+                      onChange={handleChange}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors" 
+                      placeholder="홍길동" 
+                      required
+                    />
                   </div>
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-slate-400 mb-2">관심 서비스</label>
-                  <select className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors">
+                  <select 
+                    name="service"
+                    value={formData.service}
+                    onChange={handleChange}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
+                  >
                     <option>이벤트 경품 대행</option>
                     <option>문화 혜택 서비스</option>
                     <option>베베하우스 마케팅</option>
@@ -91,11 +163,22 @@ const Contact: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-slate-400 mb-2">문의 내용</label>
-                  <textarea className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white h-32 focus:outline-none focus:border-blue-500 transition-colors" placeholder="진행하고자 하시는 마케팅이나 궁금한 점을 적어주세요."></textarea>
+                  <textarea 
+                    name="message"
+                    value={formData.message}
+                    onChange={handleChange}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white h-32 focus:outline-none focus:border-blue-500 transition-colors" 
+                    placeholder="진행하고자 하시는 마케팅이나 궁금한 점을 적어주세요."
+                    required
+                  ></textarea>
                 </div>
-                <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 shadow-xl shadow-blue-600/20 transition-all">
-                  상담 신청하기
-                  <Send className="w-5 h-5" />
+                <button 
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 shadow-xl shadow-blue-600/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? '전송 중...' : '상담 신청하기'}
+                  {!isSubmitting && <Send className="w-5 h-5" />}
                 </button>
               </form>
             </div>
