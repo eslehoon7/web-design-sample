@@ -11,6 +11,7 @@ const Contact: React.FC = () => {
   const [formData, setFormData] = useState({
     company: '',
     manager: '',
+    phone: '',
     service: '이벤트 경품 대행',
     message: ''
   });
@@ -40,7 +41,7 @@ const Contact: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.company || !formData.manager || !formData.service || !formData.message) {
+    if (!formData.company || !formData.manager || !formData.phone || !formData.service || !formData.message) {
       alert('모든 항목을 입력해주세요.');
       return;
     }
@@ -63,6 +64,7 @@ const Contact: React.FC = () => {
         setFormData({
           company: '',
           manager: '',
+          phone: '',
           service: '이벤트 경품 대행',
           message: ''
         });
@@ -162,6 +164,18 @@ const Contact: React.FC = () => {
                       required
                     />
                   </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-400 mb-2">연락처</label>
+                  <input 
+                    type="text" 
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors" 
+                    placeholder="010-1234-5678" 
+                    required
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-slate-400 mb-2">관심 서비스</label>
