@@ -60,6 +60,7 @@ const Contact: React.FC = () => {
       });
 
       if (response.ok) {
+        alert('✅ 문의가 접수되었습니다! 담당자가 24시간 내에 연락드리겠습니다');
         setIsSuccess(true);
         setFormData({
           company: '',
@@ -80,11 +81,7 @@ const Contact: React.FC = () => {
       }
     } catch (error) {
       console.error('Submission error:', error);
-      if (error instanceof TypeError && error.message === 'Failed to fetch') {
-        alert('❌ 연결 오류: n8n 서버에 접속할 수 없습니다. Webhook URL이 활성화되어 있는지, 혹은 브라우저의 광고 차단 확장 프로그램이 작동 중인지 확인해주세요.');
-      } else {
-        alert(`❌ 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
-      }
+      alert('❌ 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
     } finally {
       setIsSubmitting(false);
     }
