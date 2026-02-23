@@ -1,12 +1,13 @@
 
 import React, { useState } from 'react';
-import { Send, MapPin, Phone, Mail } from 'lucide-react';
+import { Send, MapPin, Phone, Mail, Check } from 'lucide-react';
 import { motion } from 'motion/react';
 
-const WEBHOOK_URL = 'https://eslehoon.app.n8n.cloud/webhook-test/planpia-inquiry';
+const WEBHOOK_URL = 'https://eslehoon.app.n8n.cloud/webhook/planpia-inquiry';
 
 const Contact: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [formData, setFormData] = useState({
     company: '',
     manager: '',
@@ -45,28 +46,43 @@ const Contact: React.FC = () => {
     }
 
     setIsSubmitting(true);
+    setIsSuccess(false);
 
     try {
       const response = await fetch(WEBHOOK_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         body: JSON.stringify(formData)
       });
 
       if (response.ok) {
-        alert('✅ 문의가 접수되었습니다!\nPlanpia 담당자가 24시간 내에 연락드리겠습니다 😊');
+        setIsSuccess(true);
         setFormData({
           company: '',
           manager: '',
           service: '이벤트 경품 대행',
           message: ''
         });
+        
+        // Reset success state after 5 seconds to allow new submissions
+        setTimeout(() => {
+          setIsSuccess(false);
+        }, 5000);
       } else {
-        throw new Error('서버 오류');
+        const errorText = await response.text();
+        console.error('Server response error:', errorText);
+        throw new Error(`서버 응답 오류 (상태 코드: ${response.status})`);
       }
     } catch (error) {
       console.error('Submission error:', error);
-      alert('❌ 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        alert('❌ 연결 오류: n8n 서버에 접속할 수 없습니다. Webhook URL이 활성화되어 있는지, 혹은 브라우저의 광고 차단 확장 프로그램이 작동 중인지 확인해주세요.');
+      } else {
+        alert(`❌ 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -174,11 +190,26 @@ const Contact: React.FC = () => {
                 </div>
                 <button 
                   type="submit"
-                  disabled={isSubmitting}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 shadow-xl shadow-blue-600/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isSubmitting || isSuccess}
+                  className={`w-full font-bold py-4 rounded-xl flex items-center justify-center gap-2 shadow-xl transition-all disabled:cursor-not-allowed ${
+                    isSuccess 
+                      ? 'bg-emerald-500 text-white shadow-emerald-500/20' 
+                      : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20'
+                  }`}
                 >
-                  {isSubmitting ? '전송 중...' : '상담 신청하기'}
-                  {!isSubmitting && <Send className="w-5 h-5" />}
+                  {isSubmitting ? (
+                    '전송 중...'
+                  ) : isSuccess ? (
+                    <>
+                      <Check className="w-5 h-5" />
+                      접수 완료되었습니다. 감사합니다.
+                    </>
+                  ) : (
+                    <>
+                      상담 신청하기
+                      <Send className="w-5 h-5" />
+                    </>
+                  )}
                 </button>
               </form>
             </div>
